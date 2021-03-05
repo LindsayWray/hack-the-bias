@@ -19,6 +19,7 @@ data = pd.read_csv("survey_results_public_mega_inc.csv")
 data = data[~data.Gender.isin([float('nan')])]
 data = data[~data.ConvertedSalary.isin([float('nan')])]
 data = data[~data.Age.isin([float('nan')])]
+data = data[~data.FormalEducation.isin([float('nan')])]
 
 def age_to_int(age):
 	if age == "Under 18 years old":
@@ -39,6 +40,29 @@ def age_to_int(age):
 		print(age)
 		return (0)
 
+def edu_to_int(edu):
+	if edu == "I never completed any formal education":
+		return 0
+	if edu == "Primary/elementary school":
+		return 1
+	if edu == "Secondary school (e.g. American high school, German Realschule or Gymnasium, etc.)":
+		return 2
+	if edu == "Some college/university study without earning a degree":
+		return 3
+	if edu == "Bachelor’s degree (BA, BS, B.Eng., etc.)":
+		return 4
+	if edu == "Master’s degree (MA, MS, M.Eng., MBA, etc.)":
+		return 5
+	if edu == "Associate degree":
+		return 6
+	if edu == "Professional degree (JD, MD, etc.)":
+		return 7
+	if edu == "Other doctoral degree (Ph.D, Ed.D., etc.)":
+		return 7
+	else:
+		print(edu)
+		return (0)
+
 # group non male and female into other, and set dtype to string
 data.Gender = data.Gender.apply(lambda x: x if x in ['Male', 'Female'] else 'other')
 data.Gender = data.Gender.astype("string")
@@ -53,17 +77,19 @@ data['constant'] = 1
 
 data.Age = data.Age.apply(age_to_int)
 
-x = data[['Gender', 'Age']]
+data.FormalEducation = data.FormalEducation.apply(edu_to_int)
+
+x = data[['Gender', 'Age', 'FormalEducation']]
 y = data['ConvertedSalary']
 
 model = LinearRegression()
 model.fit(x, y)
 
-jane = [1, 32]
-john = [0, 32]
+jane = [1, 32, 4]
+john = [0, 32, 4]
 salary_pred = model.predict([jane, john])
 
-print("Jane (Age 32)", salary_pred[0].round(2), "; John (Age 32)", salary_pred[1].round(2))
+print("Jane (Age 32; BSc)", salary_pred[0].round(2), "; John (Age 32; BSc)", salary_pred[1].round(2))
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -71,11 +97,11 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 x1 = x["Age"]
-x2 = x["Gender"]
+x2 = x["FormalEducation"]
 ax.scatter(x1, x2, y, c='r', marker='o')
 
 ax.set_xlabel('Age')
-ax.set_ylabel('Gender 0: Male, 1: Female')
+ax.set_ylabel('FormalEducation')
 ax.set_zlabel('Salary')
 
 plt.show()
